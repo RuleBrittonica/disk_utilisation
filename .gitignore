@@ -16,6 +16,7 @@
 Cargo.lock
 /target/
 */target/
+**/target/
 /dist/
 */dist/
 
