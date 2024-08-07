@@ -7,6 +7,10 @@ use walkdir::WalkDir;
 /// # Arguments
 ///
 /// * `start_path` - a reference to a `Path` where the tree will start from
+///
+/// # Returns
+///
+/// The new folder object.
 pub fn start_folder_tree(start_path: &Path) -> Folder {
     let folder_name = start_path.file_name().unwrap_or_default().to_string_lossy().into_owned();
     let folder_path = start_path.to_path_buf();
@@ -28,7 +32,6 @@ pub fn grow_folder_tree(folder: Folder, depth: u32) -> Folder {
     folder
 }
 
-
 /// Merges two Folder Trees together. The sub folder must be a part of the main
 /// folder at some level. If the folder is empty, then it is replaced with the
 /// given sub_folder. If the folder is not empty, then its contents is either
@@ -48,8 +51,6 @@ pub fn grow_folder_tree(folder: Folder, depth: u32) -> Folder {
 pub fn merge_folder_tree(main_folder: Folder, sub_folder: Folder, overwrite: bool) -> Folder {
     main_folder
 }
-
-
 
 // Function to build a folder tree from a starting folder.
 // pub fn build_folder_tree(start_path: &Path) -> Folder {
