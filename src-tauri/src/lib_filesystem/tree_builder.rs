@@ -1,5 +1,5 @@
 use crate::lib_filesystem::filesystem::*;
-use std::path::{Path, PathBuf};
+use std::{fs, path::{Path, PathBuf}};
 use walkdir::WalkDir;
 
 /// Function to start a folder tree from a given folder
@@ -11,11 +11,76 @@ use walkdir::WalkDir;
 /// # Returns
 ///
 /// The new folder object.
+///
+/// # Example:
+///
+/// Given a folder structured as follows:
+///
+/// ```text
+/// /project/src
+/// ├── utils
+/// │   ├── mod.rs
+/// │   └── error.rs
+/// └── main.rs
+/// ```
+///
+/// The folder object now contains:
+///
+/// - `name`: "src"
+/// - `path`: "/project/src"
+/// - `size`: 0
+/// - `subfiles`: ["main.rs"]
+/// - `subfolders`: ["utils"]
 pub fn start_folder_tree(start_path: &Path) -> Folder {
-    let folder_name = start_path.file_name().unwrap_or_default().to_string_lossy().into_owned();
-    let folder_path = start_path.to_path_buf();
-    Folder::new(folder_name, folder_path)
+    let folder_name: String = start_path
+        .file_name()
+        .unwrap_or_default().
+        to_string_lossy().
+        into_owned();
+    let folder_path: PathBuf = start_path
+        .to_path_buf();
+    let mut folder: Folder = Folder::new(folder_name, folder_path);
+
+    populate_folder(&mut folder);
+
+    return folder;
+
 }
+
+/// Function to populate a foldfer with Subfolders and files
+///
+/// # Arguments
+///
+/// * `folder` a mutable reference to the `Folder` to populate
+fn populate_folder(folder: &mut Folder) {
+    for entry in fs::read_dir(&folder.path).unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        let name = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
+
+        if path.is_dir() {
+            // Create a subfolder (without populating it)
+            let subfolder: Folder = Folder::new(name, path);
+            folder.subfolders.push(subfolder);
+        }
+
+        else if path.is_file() {
+            // Create file entry
+            let extn = path
+                .extension()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .into_owned();
+            let file = File::new(name, extn, path);
+            folder.subfiles.push(file);
+        }
+    }
+}
+
 
 /// Continues growing out a Folder Tree, will grow to the depth specified by the
 /// user
@@ -29,7 +94,7 @@ pub fn start_folder_tree(start_path: &Path) -> Folder {
 ///
 /// The new folder object
 pub fn grow_folder_tree(folder: Folder, depth: u32) -> Folder {
-    folder
+    todo!()
 }
 
 /// Merges two Folder Trees together. The sub folder must be a part of the main
@@ -49,7 +114,7 @@ pub fn grow_folder_tree(folder: Folder, depth: u32) -> Folder {
 /// The new Folder object (if the sub_folder was found in the main tree).
 /// Otherwise Errors.
 pub fn merge_folder_tree(main_folder: Folder, sub_folder: Folder, overwrite: bool) -> Folder {
-    main_folder
+    todo!()
 }
 
 // Function to build a folder tree from a starting folder.
