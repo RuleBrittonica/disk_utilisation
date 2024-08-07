@@ -1,5 +1,5 @@
 [package]
-name = "disk_utilisation_app"
+name = "RustDirStat"
 version = "0.0.0"
 description = "An attempt to recreate windirstat using Tauri and Rust"
 authors = ["Matthew Britton"]
