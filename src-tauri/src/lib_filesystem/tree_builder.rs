@@ -1,6 +1,8 @@
 use crate::lib_filesystem::filesystem::*;
 use std::{fs, path::{Path, PathBuf}};
 use walkdir::WalkDir;
+use std::collections::VecDeque;
+
 
 /// Function to start a folder tree from a given folder
 ///
@@ -82,7 +84,7 @@ fn populate_folder(folder: &mut Folder) {
 }
 
 
-/// Continues growing out a Folder Tree, will grow to the depth specified by the
+/// Recursively grows out a Folder Tree, will grow to the depth specified by the
 /// user
 ///
 /// # Arguments
@@ -94,7 +96,27 @@ fn populate_folder(folder: &mut Folder) {
 ///
 /// The new folder object
 pub fn grow_folder_tree(folder: Folder, depth: u32) -> Folder {
-    todo!()
+    let mut folder = folder;
+    if depth > 0 {
+        let mut queue = VecDeque::new();
+        for subfolder in folder.subfolders.drain(..) {
+            queue.push_back((subfolder, depth - 1));
+        }
+
+        while let Some((mut subfolder, remaining_depth)) = queue.pop_front() {
+            populate_folder(&mut subfolder);
+
+            if remaining_depth > 0 {
+                for child_folder in subfolder.subfolders.drain(..) {
+                    queue.push_back((child_folder, remaining_depth - 1));
+                }
+            }
+
+            folder.subfolders.push(subfolder);
+        }
+    }
+
+    folder
 }
 
 /// Merges two Folder Trees together. The sub folder must be a part of the main

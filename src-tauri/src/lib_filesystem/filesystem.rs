@@ -1,5 +1,7 @@
 use std::fmt;
 use std::path::{Path, PathBuf};
+use crate::lib_filesystem::constants::{KB, MB, GB, TB};
+
 // Root node representing the filesystem.
 #[derive(Debug)]
 pub struct Root {
@@ -93,11 +95,11 @@ impl fmt::Display for Disk {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "Disk Name: {} | # Subfolders: {} | # Subfiles: {} | Size: {} bytes",
+            "Disk Name: {} | # Subfolders: {} | # Subfiles: {} | Size: {}",
             self.name,
             self.subfolders.len(),
             self.subfiles.len(),
-            self.size,
+            format_size(self.size),
         )
     }
 }
@@ -106,11 +108,11 @@ impl fmt::Display for Folder {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "Fodler Name: {} | # Subfolders: {} | # Subfiles: {} | Size: {} bytes",
+            "Folder Name: {} | # Subfolders: {} | # Subfiles: {} | Size: {}",
             self.name,
             self.subfolders.len(),
             self.subfiles.len(),
-            self.size,
+            format_size(self.size),
         )
     }
 }
@@ -119,10 +121,10 @@ impl fmt::Display for File {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "File Name: {} | Type: {} | Size: {} bytes",
+            "File Name: {} | Type: {} | Size: {}",
             self.name,
             self.extn,
-            self.size
+            format_size(self.size),
         )
     }
 }
@@ -173,5 +175,19 @@ impl File {
             path,
             size: 0,
         }
+    }
+}
+
+fn format_size(size: u64) -> String {
+    if size >= TB {
+        format!("{:.2} TB", size as f64 / TB as f64)
+    } else if size >= GB {
+        format!("{:.2} GB", size as f64 / GB as f64)
+    } else if size >= MB {
+        format!("{:.2} MB", size as f64 / MB as f64)
+    } else if size >= KB {
+        format!("{:.2} KB", size as f64 / KB as f64)
+    } else {
+        format!("{} bytes", size)
     }
 }
