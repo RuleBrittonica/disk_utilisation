@@ -25,11 +25,12 @@ use std::path::Path;
 
 mod lib_filesystem;
 
-use lib_filesystem::{tree_builder, tree_display};
+use lib_filesystem::{filesystem::Folder, tree_builder, tree_display};
 
 fn main() {
-    let start_path = Path::new("tmp/");
-    let folder_tree = tree_builder::build_folder_tree(start_path);
+    let start_path: &Path = Path::new("tmp/test_1");
+    let mut folder_tree: Folder = tree_builder::start_folder_tree(start_path);
+    folder_tree = tree_builder::grow_folder_tree(folder_tree, 2);
 
     // Print the constructed folder tree with details
     tree_display::print_folder_tree(&folder_tree, 0);
