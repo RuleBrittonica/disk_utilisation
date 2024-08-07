@@ -1,10 +1,11 @@
 use std::fmt;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use crate::lib_filesystem::constants::{KB, MB, GB, TB};
 
 // Root node representing the filesystem.
 #[derive(Debug)]
-pub struct Root {
+pub struct Computer {
+    pub name: String,
     pub disks: Vec<Disk>,
     pub total_size: u64, // Total size of all disks combined.
 }
@@ -20,6 +21,7 @@ pub trait FileSystemEntity {
 }
 
 // Disk containing folders and files.
+// Really just a folder, but might allow for some cool stuff later?
 #[derive(Debug)]
 pub struct Disk {
     pub name: String,
@@ -91,6 +93,18 @@ impl FileSystemEntity for File {
     }
 }
 
+impl fmt::Display for Computer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Computer Name: {} | Total Size: {}\n", self.name, format_size(self.total_size))?;
+
+        for disk in &self.disks {
+            writeln!(f, "{}", disk)?;
+        }
+
+        Ok(())
+    }
+}
+
 impl fmt::Display for Disk {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -129,9 +143,10 @@ impl fmt::Display for File {
     }
 }
 
-impl Root {
-    pub fn new() -> Self {
-        Root {
+impl Computer {
+    pub fn new(name: String) -> Self {
+        Computer {
+            name: name,
             disks: Vec::new(),
             total_size: 0,
         }
@@ -179,13 +194,13 @@ impl File {
 }
 
 fn format_size(size: u64) -> String {
-    if size >= TB {
+    if size >= (TB + 10 * GB) {
         format!("{:.2} TB", size as f64 / TB as f64)
-    } else if size >= GB {
+    } else if size >= (GB + 10 * MB) {
         format!("{:.2} GB", size as f64 / GB as f64)
-    } else if size >= MB {
+    } else if size >= (MB + 10 * KB) {
         format!("{:.2} MB", size as f64 / MB as f64)
-    } else if size >= KB {
+    } else if size >= (KB + 100) {
         format!("{:.2} KB", size as f64 / KB as f64)
     } else {
         format!("{} bytes", size)
