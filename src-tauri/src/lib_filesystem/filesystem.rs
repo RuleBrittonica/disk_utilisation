@@ -3,13 +3,6 @@ use std::path::PathBuf;
 use crate::lib_filesystem::constants::{KB, MB, GB, TB};
 use crate::lib_filesystem::error::DiskError;
 
-// Root node representing the filesystem.
-#[derive(Debug)]
-pub struct Computer {
-    pub name: String,
-    pub disks: Vec<Folder>,
-    pub total_size: u64, // Total size of all disks combined.
-}
 
 // Trait to represent common behaviors for Disk and Folder.
 pub trait FileSystemEntity {
@@ -21,8 +14,16 @@ pub trait FileSystemEntity {
     }
 }
 
-// Folder containing subfolders and files.
+// Root node representing the filesystem.
 #[derive(Debug)]
+pub struct Computer {
+    pub name: String,
+    pub disks: Vec<Folder>,
+    pub total_size: u64, // Total size of all disks combined.
+}
+
+// Folder containing subfolders and files.
+#[derive(Debug, Clone)]
 pub struct Folder {
     pub name: String,
     pub path: PathBuf,
@@ -33,9 +34,8 @@ pub struct Folder {
     pub empty: bool,
 }
 
-
 // File with name, extension, and size.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct File {
     pub name: String,
     pub extn: String,
@@ -130,9 +130,9 @@ impl Computer {
 }
 
 impl Folder {
-    pub fn new(name: String, path: PathBuf) -> Self {
+    pub fn new(path: PathBuf) -> Self {
         Folder {
-            name,
+            name: Folder::name_from_path(&path),
             path,
             size: 0,
             subfiles: Vec::new(),
@@ -142,27 +142,48 @@ impl Folder {
         }
     }
 
-    pub fn new_disk(name: String, path: PathBuf) -> Self {
-        Folder {
-            name,
-            path,
-            size: 0,
-            subfiles: Vec::new(),
-            subfolders: Vec::new(),
-            disk: true,
-            empty: false,
-        }
+    pub fn new_disk(path: PathBuf) -> Self {
+        let mut folder = Folder::new(path);
+        folder.disk = true;
+        folder
+    }
+
+    fn name_from_path(path: &PathBuf) -> String {
+        let name = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
+        name
     }
 }
 
 impl File {
-    pub fn new(name: String, extn: String, path: PathBuf) -> Self {
+    pub fn new(path: PathBuf) -> Self {
         File {
-            name,
-            extn,
+            name: File::name_from_path(&path),
+            extn: File::extn_from_path(&path),
             path,
             size: 0,
         }
+    }
+
+    fn name_from_path(path: &PathBuf) -> String {
+        let name = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
+        name
+    }
+
+    fn extn_from_path(path: &PathBuf) -> String {
+        let extn = path
+            .extension()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
+        extn
     }
 }
 

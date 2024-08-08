@@ -25,13 +25,27 @@ use std::path::Path;
 
 mod lib_filesystem;
 
-use lib_filesystem::{filesystem::Folder, tree_builder, tree_display};
+use lib_filesystem::{filesystem::{Folder, File}, tree_builder, tree_display, tree_destructor};
 
 fn main() {
     let start_path: &Path = Path::new("tmp/test_1");
     let mut folder_tree: Folder = tree_builder::start_folder_tree(start_path);
-    folder_tree = tree_builder::grow_folder_tree(folder_tree, 2);
+    // folder_tree = tree_builder::grow_folder_tree(folder_tree, 2);
+
+    let all_folders: Vec<Folder> = tree_destructor::get_all_folders(folder_tree.clone());
+    let all_files: Vec<File> = tree_destructor::get_all_files(folder_tree.clone());
+
+    println!("Folders:");
+    for folder in &all_folders {
+        println!("{}", folder);
+    }
+
+    println!("Files:");
+    for file in &all_files {
+        println!("{}", file);
+    }
+
 
     // Print the constructed folder tree with details
-    tree_display::print_folder_tree(&folder_tree, 0);
+    // tree_display::print_folder_tree(&folder_tree, 0);
 }
