@@ -1,6 +1,8 @@
 use crate::lib_filesystem::filesystem::*;
-use std::{fs, path::{Path, PathBuf}};
+use std::path::{Path, PathBuf};
 use std::collections::VecDeque;
+use std::fs;
+use walkdir::WalkDir;
 
 
 /// Function to start a folder tree from a given folder
@@ -41,16 +43,14 @@ pub fn start_folder_tree(start_path: &Path) -> Folder {
         .into_owned();
     let folder_path: PathBuf = start_path.to_path_buf();
 
-    let mut folder: Folder;
+    let folder: Folder;
     if is_disk(start_path) {
         folder = Folder::new_disk(folder_name, folder_path);
     } else {
         folder = Folder::new(folder_name, folder_path);
     }
 
-    populate_folder(&mut folder);
-
-    folder
+    populate_folder(folder)
 }
 
 fn is_disk(path: &Path) -> bool {
@@ -63,7 +63,10 @@ fn is_disk(path: &Path) -> bool {
 /// # Arguments
 ///
 /// * `folder` a mutable reference to the `Folder` to populate
-fn populate_folder(folder: &mut Folder) {
+fn populate_folder(folder: Folder) -> Folder {
+
+    let mut folder = folder;
+
     for entry in fs::read_dir(&folder.path).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
@@ -90,6 +93,8 @@ fn populate_folder(folder: &mut Folder) {
             folder.subfiles.push(file);
         }
     }
+
+    folder
 }
 
 
@@ -105,23 +110,39 @@ fn populate_folder(folder: &mut Folder) {
 ///
 /// The new folder object
 pub fn grow_folder_tree(folder: Folder, depth: u32) -> Folder {
-    let mut folder = folder;
+    let mut folder: Folder = folder;
+
     if depth > 0 {
-        let mut queue = VecDeque::new();
+        let mut queue: VecDeque<(Folder, u32)> = VecDeque::new();
+
         for subfolder in folder.subfolders.drain(..) {
             queue.push_back((subfolder, depth - 1));
         }
 
-        while let Some((mut subfolder, remaining_depth)) = queue.pop_front() {
-            populate_folder(&mut subfolder);
+        while let Some((subfolder, remaining_depth)) = queue.pop_front() {
+            let mut updated_subfolder: Folder = populate_folder(subfolder);
 
             if remaining_depth > 0 {
-                for child_folder in subfolder.subfolders.drain(..) {
-                    queue.push_back((child_folder, remaining_depth - 1));
+                let subfolder_path: PathBuf = updated_subfolder.path.clone();
+                for entry in WalkDir::new(&subfolder_path).min_depth(1).max_depth(1) {
+                    let entry: walkdir::DirEntry = entry.unwrap();
+                    let path: PathBuf = entry.path().to_path_buf();
+                    let name: String = path.file_name().unwrap_or_default().to_string_lossy().into_owned();
+
+                    if entry.file_type().is_dir() {
+                        // Recursively grow subfolder tree
+                        let child_folder: Folder = grow_folder_tree(Folder::new(name, path), remaining_depth - 1);
+                        updated_subfolder.subfolders.push(child_folder);
+                    } else if entry.file_type().is_file() {
+                        // Create a file and add it to the subfolder
+                        let extn: String = path.extension().unwrap_or_default().to_string_lossy().into_owned();
+                        let file: File = File::new(name, extn, path);
+                        updated_subfolder.subfiles.push(file);
+                    }
                 }
             }
 
-            folder.subfolders.push(subfolder);
+            folder.subfolders.push(updated_subfolder);
         }
     }
 
@@ -147,3 +168,36 @@ pub fn grow_folder_tree(folder: Folder, depth: u32) -> Folder {
 pub fn merge_folder_tree(main_folder: Folder, sub_folder: Folder, overwrite: bool) -> Folder {
     todo!()
 }
+
+
+/// Traverses a Folder Tree and determines if it is complete. A Folder Tree is
+/// defined as complete if:
+/// * All empty folders have the `empty` field marked as true
+pub fn file_tree_complete(folder: Folder) -> bool {
+    todo!()
+}
+
+// // Function to build a folder tree from a starting folder.
+// pub fn build_folder_tree(start_path: &Path) -> Folder {
+//     let folder_name = start_path.file_name().unwrap_or_default().to_string_lossy().into_owned();
+//     let mut root_folder = Folder::new(folder_name, start_path.to_path_buf());
+
+//     for entry in WalkDir::new(start_path).min_depth(1).max_depth(1) {
+//         let entry = entry.unwrap();
+//         let path = entry.path().to_path_buf();
+//         let name = path.file_name().unwrap_or_default().to_string_lossy().into_owned();
+
+//         if entry.file_type().is_dir() {
+//             // Recursively build subfolder tree
+//             let subfolder = build_folder_tree(&path);
+//             root_folder.subfolders.push(subfolder);
+//         } else if entry.file_type().is_file() {
+//             // Create a file and add it to the current folder
+//             let extn = path.extension().unwrap_or_default().to_string_lossy().into_owned();
+//             let file = File::new(name, extn, path);
+//             root_folder.subfiles.push(file);
+//         }
+//     }
+
+//     root_folder
+// }
