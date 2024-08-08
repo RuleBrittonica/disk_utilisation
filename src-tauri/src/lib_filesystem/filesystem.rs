@@ -31,7 +31,7 @@ pub struct Folder {
     pub subfiles: Vec<File>,
     pub subfolders: Vec<Folder>,
     pub disk: bool,
-    pub empty: bool,
+    pub traversed: bool,
 }
 
 // File with name, extension, and size.
@@ -96,6 +96,8 @@ impl fmt::Display for Folder {
     }
 }
 
+
+
 impl fmt::Display for File {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -138,7 +140,7 @@ impl Folder {
             subfiles: Vec::new(),
             subfolders: Vec::new(),
             disk: false,
-            empty: false,
+            traversed: false,
         }
     }
 

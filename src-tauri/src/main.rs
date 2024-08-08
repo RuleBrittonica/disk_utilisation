@@ -47,5 +47,5 @@ fn main() {
 
 
     // Print the constructed folder tree with details
-    // tree_display::print_folder_tree(&folder_tree, 0);
+    tree_display::print_folder_tree(&folder_tree, 0);
 }
