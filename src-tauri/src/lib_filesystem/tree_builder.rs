@@ -11,7 +11,8 @@ use std::collections::VecDeque;
 ///
 /// # Returns
 ///
-/// The new folder object.
+/// The new folder object. The folder object will be marked as a disk if the
+/// path is to a root path like `C:\`
 ///
 /// # Example:
 ///
@@ -35,17 +36,26 @@ use std::collections::VecDeque;
 pub fn start_folder_tree(start_path: &Path) -> Folder {
     let folder_name: String = start_path
         .file_name()
-        .unwrap_or_default().
-        to_string_lossy().
-        into_owned();
-    let folder_path: PathBuf = start_path
-        .to_path_buf();
-    let mut folder: Folder = Folder::new(folder_name, folder_path);
+        .unwrap_or_default()
+        .to_string_lossy()
+        .into_owned();
+    let folder_path: PathBuf = start_path.to_path_buf();
+
+    let mut folder: Folder;
+    if is_disk(start_path) {
+        folder = Folder::new_disk(folder_name, folder_path);
+    } else {
+        folder = Folder::new(folder_name, folder_path);
+    }
 
     populate_folder(&mut folder);
 
-    return folder;
+    folder
+}
 
+fn is_disk(path: &Path) -> bool {
+    // On Windows, check if the path is a root path like `C:\`
+    path.parent().is_none()
 }
 
 /// Function to populate a foldfer with Subfolders and files
@@ -137,28 +147,3 @@ pub fn grow_folder_tree(folder: Folder, depth: u32) -> Folder {
 pub fn merge_folder_tree(main_folder: Folder, sub_folder: Folder, overwrite: bool) -> Folder {
     todo!()
 }
-
-// Function to build a folder tree from a starting folder.
-// pub fn build_folder_tree(start_path: &Path) -> Folder {
-//     let folder_name = start_path.file_name().unwrap_or_default().to_string_lossy().into_owned();
-//     let mut root_folder = Folder::new(folder_name, start_path.to_path_buf());
-
-//     for entry in WalkDir::new(start_path).min_depth(1).max_depth(1) {
-//         let entry = entry.unwrap();
-//         let path = entry.path().to_path_buf();
-//         let name = path.file_name().unwrap_or_default().to_string_lossy().into_owned();
-
-//         if entry.file_type().is_dir() {
-//             // Recursively build subfolder tree
-//             let subfolder = build_folder_tree(&path);
-//             root_folder.subfolders.push(subfolder);
-//         } else if entry.file_type().is_file() {
-//             // Create a file and add it to the current folder
-//             let extn = path.extension().unwrap_or_default().to_string_lossy().into_owned();
-//             let file = File::new(name, extn, path);
-//             root_folder.subfiles.push(file);
-//         }
-//     }
-
-//     root_folder
-// }

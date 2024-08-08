@@ -1,12 +1,13 @@
 use std::fmt;
 use std::path::PathBuf;
 use crate::lib_filesystem::constants::{KB, MB, GB, TB};
+use crate::lib_filesystem::error::DiskError;
 
 // Root node representing the filesystem.
 #[derive(Debug)]
 pub struct Computer {
     pub name: String,
-    pub disks: Vec<Disk>,
+    pub disks: Vec<Folder>,
     pub total_size: u64, // Total size of all disks combined.
 }
 
@@ -20,17 +21,6 @@ pub trait FileSystemEntity {
     }
 }
 
-// Disk containing folders and files.
-// Really just a folder, but might allow for some cool stuff later?
-#[derive(Debug)]
-pub struct Disk {
-    pub name: String,
-    pub path: PathBuf,
-    pub size: u64,
-    pub subfiles: Vec<File>,
-    pub subfolders: Vec<Folder>,
-}
-
 // Folder containing subfolders and files.
 #[derive(Debug)]
 pub struct Folder {
@@ -39,6 +29,8 @@ pub struct Folder {
     pub size: u64,
     pub subfiles: Vec<File>,
     pub subfolders: Vec<Folder>,
+    pub disk: bool,
+    pub empty: bool,
 }
 
 
@@ -49,20 +41,6 @@ pub struct File {
     pub extn: String,
     pub path: PathBuf,
     pub size: u64,
-}
-
-impl FileSystemEntity for Disk {
-    fn name(&self) -> &String {
-        &self.name
-    }
-
-    fn path(&self) -> &PathBuf {
-        &self.path
-    }
-
-    fn size(&self) -> u64 {
-        self.size
-    }
 }
 
 impl FileSystemEntity for Folder {
@@ -105,19 +83,6 @@ impl fmt::Display for Computer {
     }
 }
 
-impl fmt::Display for Disk {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Disk Name: {} | # Subfolders: {} | # Subfiles: {} | Size: {}",
-            self.name,
-            self.subfolders.len(),
-            self.subfiles.len(),
-            format_size(self.size),
-        )
-    }
-}
-
 impl fmt::Display for Folder {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -152,20 +117,14 @@ impl Computer {
         }
     }
 
-    pub fn add_disk(&mut self, disk: Disk) {
-        self.total_size += disk.size;
-        self.disks.push(disk);
-    }
-}
-
-impl Disk {
-    pub fn new(name: String, path: PathBuf) -> Self {
-        Disk {
-            name,
-            path,
-            size: 0,
-            subfiles: Vec::new(),
-            subfolders: Vec::new(),
+    pub fn add_disk(&mut self, disk: Folder) -> Result<(), DiskError> {
+        if disk.disk {
+            self.total_size += disk.size;
+            self.disks.push(disk);
+            Ok(())
+        }
+        else {
+            Err(DiskError::NotADisk)
         }
     }
 }
@@ -178,6 +137,20 @@ impl Folder {
             size: 0,
             subfiles: Vec::new(),
             subfolders: Vec::new(),
+            disk: false,
+            empty: false,
+        }
+    }
+
+    pub fn new_disk(name: String, path: PathBuf) -> Self {
+        Folder {
+            name,
+            path,
+            size: 0,
+            subfiles: Vec::new(),
+            subfolders: Vec::new(),
+            disk: true,
+            empty: false,
         }
     }
 }
@@ -193,7 +166,7 @@ impl File {
     }
 }
 
-fn format_size(size: u64) -> String {
+pub fn format_size(size: u64) -> String {
     if size >= (TB + 10 * GB) {
         format!("{:.2} TB", size as f64 / TB as f64)
     } else if size >= (GB + 10 * MB) {
