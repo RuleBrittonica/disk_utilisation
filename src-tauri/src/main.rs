@@ -7,19 +7,16 @@ mod menu;
 mod drives;
 mod memory;
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
 fn main() {
     Builder::default()
         .menu(menu::build_menu())
         .on_menu_event(|event| {
             println!("Menu item selected: {}", event.menu_item_id());
         })
-        .invoke_handler(tauri::generate_handler![greet])
-        .invoke_handler(tauri::generate_handler![drives::get_drives])
+        .invoke_handler(tauri::generate_handler![
+            drives::get_drives,
+            memory::get_memory_usage,
+        ])
         .run(generate_context!())
         .expect("error while running tauri application");
 }

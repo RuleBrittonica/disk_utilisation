@@ -85,4 +85,44 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('Error fetching drives:', error);
   }
+
+  // Add a new section for memory usage
+  const bottomLeft = document.createElement('div');
+  bottomLeft.className = 'bottom-left';
+  document.body.appendChild(bottomLeft);
+
+  const progressBarContainer = document.createElement('div');
+  progressBarContainer.className = 'memory-progress-bar-container';
+
+  const progressBar = document.createElement('div');
+  progressBar.className = 'memory-progress-bar';
+
+  const progressBarInner = document.createElement('div');
+  progressBarInner.className = 'memory-progress-bar-inner';
+  progressBar.appendChild(progressBarInner);
+
+  const memoryDetails = document.createElement('span');
+  memoryDetails.className = 'memory-details';
+
+  bottomLeft.appendChild(progressBarContainer);
+  progressBarContainer.appendChild(progressBar);
+  bottomLeft.appendChild(memoryDetails);
+
+  // Function to update memory usage
+  async function updateMemoryUsage() {
+    try {
+      const memoryUsage = await invoke('get_memory_usage');
+      const usedMemoryPercentage = (memoryUsage.used_memory / memoryUsage.max_memory) * 100;
+      progressBarInner.style.width = `${usedMemoryPercentage}%`;
+      memoryDetails.textContent = `Memory Used: ${memoryUsage.used_memory} MB / ${memoryUsage.max_memory} MB`;
+    } catch (error) {
+      console.error('Error fetching memory usage:', error);
+    }
+  }
+
+  // Update memory usage every second
+  setInterval(updateMemoryUsage, 1000);
+
+  // Initial update
+  updateMemoryUsage();
 });

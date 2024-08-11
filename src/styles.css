@@ -93,3 +93,36 @@ body {
   color: #333;
   margin-top: 5px;
 }
+
+.bottom-left {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.memory-progress-bar-container {
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  height: 25px;
+  margin-bottom: 5px;
+}
+
+.memory-progress-bar {
+  background: #4caf50;
+  height: 100%;
+  width: 0;
+  transition: width 0.5s;
+}
+
+.memory-progress-bar-inner {
+  height: 100%;
+}
+
+.memory-details {
+  font-size: 14px;
+}
