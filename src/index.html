@@ -1,41 +1,29 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="stylesheet" href="styles.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri App</title>
-    <script type="module" src="/main.js" defer></script>
-  </head>
-
-  <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File System App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
     <div class="container">
-      <h1>Welcome to Tauri!</h1>
-
-      <div class="row">
-        <a href="https://tauri.app" target="_blank">
-          <img src="/assets/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a
-          href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"
-          target="_blank"
-        >
-          <img
-            src="/assets/javascript.svg"
-            class="logo vanilla"
-            alt="JavaScript logo"
-          />
-        </a>
-      </div>
-
-      <p>Click on the Tauri logo to learn more about the framework</p>
-
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-
-      <p id="greet-msg"></p>
+        <div class="left-column">
+            <!-- "All Drives" button permanently here -->
+            <button class="drive-button">All Drives</button>
+        </div>
+        <div class="right-column">
+            <button class="browse-button">Browse for a specific folder</button>
+        </div>
     </div>
-  </body>
+    <div class="bottom-left">
+        <div class="memory-progress-bar-container">
+            <div class="memory-progress-bar">
+                <div class="memory-progress-bar-inner"></div>
+            </div>
+        </div>
+        <span class="memory-details">Memory Used: 0 MB</span>
+    </div>
+    <script src="main.js"></script>
+</body>
 </html>

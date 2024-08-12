@@ -41,7 +41,6 @@ pub fn start_folder_tree(start_path: &Path) -> Folder {
     } else {
         folder = Folder::new(folder_path);
     }
-
     populate_folder(folder)
 }
 
@@ -57,7 +56,9 @@ fn is_disk(path: &Path) -> bool {
 /// * `folder` a mutable reference to the `Folder` to populate
 fn populate_folder(folder: Folder) -> Folder {
 
-    let mut folder = folder;
+    let mut folder: Folder = folder;
+
+    folder.traversed = true;
 
     for entry in fs::read_dir(&folder.path).unwrap() {
         let entry: DirEntry = entry.unwrap();
@@ -76,18 +77,18 @@ fn populate_folder(folder: Folder) -> Folder {
 }
 
 
-/// Recursively grows out a Folder Tree, will grow to the depth specified by the
-/// user
+/// Grows out a folder tree by one level. Traverses down the tree, to all
+/// folders that haven't been marked as traversed. From there it fills out each
+/// folder with their list of sub-Folders, Files, and other Data.
 ///
 /// # Arguments
 ///
 /// * `folder` - The folder to continue growing
-/// * `depth`  - The depth to grow the tree to
 ///
 /// # Returns
 ///
 /// The new folder object
-pub fn grow_folder_tree(folder: Folder, depth: u32) -> Folder {
+pub fn grow_folder_tree(folder: Folder) -> Folder {
     todo!()
 }
 
@@ -107,7 +108,7 @@ pub fn grow_folder_tree(folder: Folder, depth: u32) -> Folder {
 /// # Returns
 ///
 /// The new Folder object (if the sub_folder was found in the main tree).
-/// Otherwise Errors.
+/// Otherwise Throws a FolderNotFound error.
 pub fn merge_folder_tree(main_folder: Folder, sub_folder: Folder, overwrite: bool) -> Folder {
     todo!()
 }
@@ -115,32 +116,29 @@ pub fn merge_folder_tree(main_folder: Folder, sub_folder: Folder, overwrite: boo
 
 /// Traverses a Folder Tree and determines if it is complete. A Folder Tree is
 /// defined as complete if:
-/// * All empty folders have the `empty` field marked as true
-pub fn file_tree_complete(folder: Folder) -> bool {
-    todo!()
+/// * All folders in the tree, and all their subfolders, and all their
+///     subfolders ... have been marked as Traversed.
+///
+/// # Arguments
+///
+/// * `folder` the Folder to be checked
+///
+/// # Returns
+///
+/// * true if the Folder has been fully traversed
+pub fn file_tree_complete(folder: &Folder) -> bool {
+    // Check if the current folder has been traversed
+    if !folder.traversed {
+        return false;
+    }
+
+    // Recursively check all subfolders
+    for subfolder in &folder.subfolders {
+        if !file_tree_complete(subfolder) {
+            return false;
+        }
+    }
+
+    // If all checks pass, the tree is complete
+    true
 }
-
-// // Function to build a folder tree from a starting folder.
-// pub fn build_folder_tree(start_path: &Path) -> Folder {
-//     let folder_name = start_path.file_name().unwrap_or_default().to_string_lossy().into_owned();
-//     let mut root_folder = Folder::new(folder_name, start_path.to_path_buf());
-
-//     for entry in WalkDir::new(start_path).min_depth(1).max_depth(1) {
-//         let entry = entry.unwrap();
-//         let path = entry.path().to_path_buf();
-//         let name = path.file_name().unwrap_or_default().to_string_lossy().into_owned();
-
-//         if entry.file_type().is_dir() {
-//             // Recursively build subfolder tree
-//             let subfolder = build_folder_tree(&path);
-//             root_folder.subfolders.push(subfolder);
-//         } else if entry.file_type().is_file() {
-//             // Create a file and add it to the current folder
-//             let extn = path.extension().unwrap_or_default().to_string_lossy().into_owned();
-//             let file = File::new(name, extn, path);
-//             root_folder.subfiles.push(file);
-//         }
-//     }
-
-//     root_folder
-// }
