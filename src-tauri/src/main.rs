@@ -45,7 +45,6 @@ fn main() {
         println!("{}", file);
     }
 
-
     // Print the constructed folder tree with details
     // tree_display::print_folder_tree(&folder_tree, 0);
 }
