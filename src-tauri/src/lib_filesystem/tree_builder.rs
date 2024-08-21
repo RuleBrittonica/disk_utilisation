@@ -1,4 +1,5 @@
 use crate::lib_filesystem::filesystem::*;
+use crate::lib_filesystem::error::*;
 use std::path::{Path, PathBuf};
 use std::fs::{self, DirEntry};
 
@@ -49,7 +50,7 @@ fn is_disk(path: &Path) -> bool {
     path.parent().is_none()
 }
 
-/// Function to populate a foldfer with Subfolders and files
+/// Function to populate a folder with Subfolders and files
 ///
 /// # Arguments
 ///
@@ -76,10 +77,28 @@ fn populate_folder(folder: Folder) -> Folder {
     folder
 }
 
+/// Grows out a folder tree by a specified number of levels.
+///
+/// # Arguments
+///
+/// * `folder` - The folder to grow out
+/// * `levels` - The number of levels to grow out the folder tree by
+///
+/// # Returns
+///
+/// The new folder object
+pub fn grow_folder_tree(folder: Folder, levels: u32) -> Folder {
+    match levels {
+        0 => folder, // Base case: if no levels remain, return the current folder
+        _ => {
+            let unfolded_folder = unfold_folder(folder);
+            grow_folder_tree(unfolded_folder, levels - 1)
+        }
+    }
+}
 
-/// Grows out a folder tree by one level. Traverses down the tree, to all
-/// folders that haven't been marked as traversed. From there it fills out each
-/// folder with their list of sub-Folders, Files, and other Data.
+
+/// Unfolds a folder tree by a single level.
 ///
 /// # Arguments
 ///
@@ -88,10 +107,46 @@ fn populate_folder(folder: Folder) -> Folder {
 /// # Returns
 ///
 /// The new folder object
-pub fn grow_folder_tree(folder: Folder) -> Folder {
+///
+/// # Examples:
+///
+/// Say we have a folder tree defined as follows:
+/// src
+/// |- ABC
+///    |- ABC_1
+///       |- ABC_1_1
+///       |- ABC_1_2
+///       |- 123.txt
+///    |- ABC_2
+///       |- ABC_2_1
+///       |- ABC_2_2
+///       |- 456.txt
+///    |- 789.txt
+/// |- DEF
+///    |- ** Defined Similarly **
+/// |- xyz.txt
+///
+/// And an initial folder object containing:
+/// src
+/// |- ABC
+/// |- DEF
+/// |- xyz.txt
+///
+/// Then Calling unfold_folder once on this folder will return a folder containing:
+/// src
+/// |- ABC
+///    |- ABC_1
+///    |- ABC_2
+///    |- 789.txt
+/// |- DEF
+///    |- ...
+/// |- xyz.txt
+///
+/// Calling unfold_folder(unfold_folder(folder)) will return the whole tree from
+/// the original folder
+fn unfold_folder(mut folder: Folder) -> Folder {
     todo!()
 }
-
 
 /// Merges two Folder Trees together. The sub folder must be a part of the main
 /// folder at some level. If the folder is empty, then it is replaced with the
@@ -109,8 +164,58 @@ pub fn grow_folder_tree(folder: Folder) -> Folder {
 ///
 /// The new Folder object (if the sub_folder was found in the main tree).
 /// Otherwise Throws a FolderNotFound error.
-pub fn merge_folder_tree(main_folder: Folder, sub_folder: Folder, overwrite: bool) -> Folder {
-    todo!()
+pub fn merge_folder_tree(
+    main_folder: Folder,
+    sub_folder: Folder,
+    overwrite: bool
+    ) -> Result<Folder, FileSystemError> {
+
+    // Check if the current folder is the target folder to merge into
+    if main_folder.path == sub_folder.path {
+        if overwrite {
+            main_folder.subfolders = sub_folder.subfolders;
+            main_folder.subfiles = sub_folder.subfiles;
+        } else {
+            // Merge subfolders
+            for sub in sub_folder.subfolders {
+                match main_folder.subfolders.iter_mut().find(|f| f.path == sub.path) {
+                    Some(existing_subfolder) => {
+                        *existing_subfolder = Folder::merge_folder_tree(
+                            existing_subfolder.clone(),
+                            sub,
+                            overwrite,
+                        )?;
+                    }
+                    None => main_folder.subfolders.push(sub),
+                }
+            }
+            // Merge subfiles
+            for sub_file in sub_folder.subfiles {
+                if overwrite {
+                    main_folder
+                        .subfiles
+                        .retain(|f| f.path != sub_file.path);
+                }
+                if !main_folder.subfiles.iter().any(|f| f.path == sub_file.path) {
+                    main_folder.subfiles.push(sub_file);
+                }
+            }
+        }
+        return Ok(main_folder);
+    }
+
+    // Recursively search in subfolders
+    for subfolder in &mut main_folder.subfolders {
+        if let Ok(merged_folder) =
+            Folder::merge_folder_tree(subfolder.clone(), sub_folder.clone(), overwrite)
+        {
+            *subfolder = merged_folder;
+            return Ok(main_folder);
+        }
+    }
+
+    // If the subfolder is not found in the main tree, return an error
+    Err(FolderError::FolderNotFound)
 }
 
 
